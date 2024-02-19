@@ -6,14 +6,14 @@ pub type PgPool = deadpool_postgres::Pool;
 pub type PgClient = deadpool_postgres::Client;
 
 pub fn get_postgres_pool(url: &str) -> anyhow::Result<PgPool> {
-    let pg_url = url::Url::parse(&url)?;
+    let pg_url = url::Url::parse(url)?;
     let dbname = match pg_url.path_segments() {
         Some(mut res) => res.next(),
         None => Some("web"),
     };
     let pool_config = deadpool_postgres::PoolConfig {
         max_size: 2,
-        timeouts: deadpool_postgres::Timeouts { 
+        timeouts: deadpool_postgres::Timeouts {
             wait: Some(Duration::from_secs(2)),
             ..Default::default()
         },
@@ -31,8 +31,6 @@ pub fn get_postgres_pool(url: &str) -> anyhow::Result<PgPool> {
     Ok(res)
 }
 
-pub async fn get_postgres_client(
-    pool: &deadpool_postgres::Pool,
-) -> anyhow::Result<PgClient> {
+pub async fn get_postgres_client(pool: &deadpool_postgres::Pool) -> anyhow::Result<PgClient> {
     pool.get().await.map_err(Into::into)
 }

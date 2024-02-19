@@ -1,9 +1,9 @@
 use std::{future::Future, str::FromStr, time::Duration};
 
-use tokio::{signal::ctrl_c, spawn, task::JoinHandle, time::sleep};
-use tokio_util::sync::CancellationToken;
 use chrono::prelude::*;
 use cron::Schedule;
+use tokio::{signal::ctrl_c, spawn, task::JoinHandle, time::sleep};
+use tokio_util::sync::CancellationToken;
 use tracing::{info, warn};
 
 use crate::db::{get_postgres_client, PgClient, PgPool};
@@ -44,7 +44,7 @@ where
                 match get_postgres_client(&pg_pool).await {
                     Ok(pg_conn) => {
                         f(&now, pg_conn).await;
-                    },
+                    }
                     Err(e) => {
                         // エラーが出たので、ここでは何もしないで次に期待する
                         warn!("get_postgres_client error={}", e);

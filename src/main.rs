@@ -9,9 +9,11 @@ use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
 use tracing_subscriber::{filter::Targets, layer::SubscriberExt, Registry};
 
 async fn is_batch(batch_code: &str, pg_conn: &PgClient) -> anyhow::Result<bool> {
-    let stmt = pg_conn.prepare("SELECT batch_code FROM resident_set_update_batch(p_batch_code := $1)").await?;
+    let stmt = pg_conn
+        .prepare("SELECT batch_code FROM resident_set_update_batch(p_batch_code := $1)")
+        .await?;
     let res = pg_conn.query(&stmt, &[&batch_code]).await?;
-    Ok(res.len() > 0)
+    Ok(!res.is_empty())
 }
 
 fn prepare_log(app_name: &str) {
@@ -27,7 +29,8 @@ fn prepare_log(app_name: &str) {
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     prepare_log("resident");
-    let pg_url = std::env::var("PG_URL").unwrap_or("postgres://user:pass@localhost:5432/web".to_owned());
+    let pg_url =
+        std::env::var("PG_URL").unwrap_or("postgres://user:pass@localhost:5432/web".to_owned());
     let pg_pool = get_postgres_pool(&pg_url)?;
     let token: CancellationToken = CancellationToken::new();
 
@@ -38,12 +41,14 @@ async fn main() -> anyhow::Result<()> {
         |&now: &_, pg_conn: _| async move {
             info!("定期的に処理する何か1 {}", now);
             match is_batch("minutely_batch", &pg_conn).await {
-                Ok(res) => if res {
-                    // 本当にやりたいバッチ処理
-                    let _result = pg_conn.query("SELECT pg_sleep(5)", &[]).await.unwrap();
-                } else {
-                    info!("is_batch is false");
-                },
+                Ok(res) => {
+                    if res {
+                        // 本当にやりたいバッチ処理
+                        let _result = pg_conn.query("SELECT pg_sleep(5)", &[]).await.unwrap();
+                    } else {
+                        info!("is_batch is false");
+                    }
+                }
                 Err(e) => {
                     warn!("is_batch error={}", e);
                 }
@@ -51,7 +56,7 @@ async fn main() -> anyhow::Result<()> {
         },
         || async move {
             info!("graceful stop looper 1");
-        }
+        },
     )];
 
     #[allow(clippy::let_underscore_future)]
