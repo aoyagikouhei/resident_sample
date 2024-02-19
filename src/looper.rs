@@ -4,13 +4,14 @@ use tokio::{signal::ctrl_c, spawn, task::JoinHandle, time::sleep};
 use tokio_util::sync::CancellationToken;
 use chrono::prelude::*;
 use cron::Schedule;
+use tracing::{info, warn};
 
 use crate::db::{get_postgres_client, PgClient, PgPool};
 
 pub fn ctrl_c_handler(token: CancellationToken) -> JoinHandle<()> {
     spawn(async move {
         ctrl_c().await.unwrap();
-        println!("received ctrl-c");
+        info!("received ctrl-c");
         token.cancel();
     })
 }
@@ -46,7 +47,7 @@ where
                     },
                     Err(e) => {
                         // エラーが出たので、ここでは何もしないで次に期待する
-                        println!("get_postgres_client error={}", e);
+                        warn!("get_postgres_client error={}", e);
                     }
                 }
 
