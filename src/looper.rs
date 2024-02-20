@@ -93,9 +93,7 @@ where
             if now >= next_tick {
                 // 定期的に行う処理実行
                 let next_tick_count = match get_postgres_client(&pg_pool).await {
-                    Ok(pg_conn) => {
-                        f(&now, pg_conn).await
-                    }
+                    Ok(pg_conn) => f(&now, pg_conn).await,
                     Err(e) => {
                         // エラーが出たので、ここでは何もしないで次に期待する
                         warn!("get_postgres_client error={}", e);

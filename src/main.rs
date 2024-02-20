@@ -20,7 +20,7 @@ async fn add_task(data_json: &serde_json::Value, pg_conn: &PgClient) -> anyhow::
     let stmt = pg_conn
         .prepare("INSERT INTO public.workers (data_json) VALUES ($1)")
         .await?;
-    let res = pg_conn.execute(&stmt, &[&data_json]).await?;
+    let _ = pg_conn.execute(&stmt, &[&data_json]).await?;
     Ok(())
 }
 
@@ -67,7 +67,9 @@ async fn main() -> anyhow::Result<()> {
                     Ok(res) => {
                         if res {
                             // 本当にやりたいバッチ処理
-                            add_task(&serde_json::json!({"now": now}), &pg_conn).await.unwrap();
+                            add_task(&serde_json::json!({"now": now}), &pg_conn)
+                                .await
+                                .unwrap();
                         } else {
                             info!("is_batch is false");
                         }
@@ -106,7 +108,7 @@ async fn main() -> anyhow::Result<()> {
             || async move {
                 info!("graceful stop worker 1");
             },
-        )
+        ),
     ];
 
     #[allow(clippy::let_underscore_future)]
